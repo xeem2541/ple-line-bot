@@ -57,16 +57,18 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const userChats = new Map();
 
 // Webhook route
-app.post('/webhook', middleware(lineConfig), async (req, res) => {
+app.post('/webhook', middleware(lineConfig), (req, res) => {
+  // ตอบกลับ LINE ทันที 200 OK เพื่อป้องกันไม่ให้ LINE ส่งข้อความซ้ำถ้าระบบ AI ตอบช้า
+  res.status(200).send('OK');
+
   try {
     const events = req.body.events;
-    if (events.length > 0) {
-      await Promise.all(events.map(handleEvent));
+    if (events && events.length > 0) {
+      // ประมวลผลแบบเบื้องหลัง (Background)
+      events.forEach(handleEvent);
     }
-    res.status(200).send('OK');
   } catch (error) {
     console.error('Webhook Error:', error);
-    res.status(500).end();
   }
 });
 
