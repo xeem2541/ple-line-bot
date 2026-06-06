@@ -53,6 +53,9 @@ const systemInstruction = `
 // Create Gemini API client
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
+// Store chat sessions for each user to maintain conversation history
+const userChats = new Map();
+
 // Webhook route
 app.post('/webhook', middleware(lineConfig), async (req, res) => {
   try {
@@ -74,17 +77,25 @@ async function handleEvent(event) {
   }
 
   const userMessage = event.message.text;
+  const userId = event.source.userId;
 
   try {
-    // Generate response using Gemini
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: userMessage,
-      config: {
-        systemInstruction: systemInstruction,
-        temperature: 0.7,
-      }
-    });
+    // Initialize a new chat session for the user if it doesn't exist
+    if (!userChats.has(userId)) {
+      userChats.set(userId, ai.chats.create({
+        model: 'gemini-2.5-flash',
+        config: {
+          systemInstruction: systemInstruction,
+          temperature: 0.7,
+        }
+      }));
+    }
+
+    // Get the user's chat session
+    const chat = userChats.get(userId);
+
+    // Generate response using Gemini chat session (maintains history)
+    const response = await chat.sendMessage({ message: userMessage });
 
     const aiReplyText = response.text;
 
