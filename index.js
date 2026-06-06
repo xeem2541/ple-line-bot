@@ -78,8 +78,16 @@ async function handleEvent(event) {
     return Promise.resolve(null);
   }
 
+  // ป้องกันข้อความค้างท่อ: LINE อาจจะส่งข้อความเก่าที่เคยส่งไม่สำเร็จมารัวๆ 
+  // ถ้าระยะเวลาข้อความเกิน 1 นาที ให้ข้ามไปเลยเพื่อไม่ให้ Gemini โควตาเต็ม
+  if (Date.now() - event.timestamp > 60000) {
+    console.log('⏳ ข้ามข้อความเก่า:', event.message.text);
+    return Promise.resolve(null);
+  }
+
   const userMessage = event.message.text;
   const userId = event.source.userId;
+  console.log('💬 ลูกค้าพิมพ์ว่า:', userMessage);
 
   try {
     // Initialize a new chat session for the user if it doesn't exist
