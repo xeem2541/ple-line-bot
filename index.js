@@ -93,7 +93,7 @@ async function handleEvent(event) {
     // Initialize a new chat session for the user if it doesn't exist
     if (!userChats.has(userId)) {
       userChats.set(userId, ai.chats.create({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-flash-latest',
         config: {
           systemInstruction: systemInstruction,
           temperature: 0.7,
